@@ -47,7 +47,10 @@ end
 def round_prompt(counter, points)
   prompt(`clear`)
   header = MSG["round"].join("\n")
-  header = format(header, count: counter, player: points[0], comp: points[1])
+  header = format(header,
+                  count: counter,
+                  player: points[0],
+                  comp: points[1])
   prompt(header)
   sleep(0.5)
 end
@@ -113,7 +116,6 @@ def update_score(score_arr, winner)
   when "Computer"
     score_arr[1] += 1
   end
-  
   score_arr
 end
 
