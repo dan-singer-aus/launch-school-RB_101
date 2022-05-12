@@ -1,0 +1,17 @@
+en: 
+  welcome: "Welcome to calculator! Enter your name:"
+  valid_name: "Make sure to have a valid name."
+  invalid_number: "Not quite a number is it...."
+  number1: "Enter first number"
+  number2: "Enter second number"
+  again?: "Do you want to perform another calculation? (Y to calculate again)"
+  bye: "Coolio, caio for now!"
+
+es:
+  welcome: "¡Bienvenido a la calculadora! Ingrese su nombre:"
+  valid_name: "Asegúrate de tener un nombre válido."
+  invalid_number: "No es exactamente un número..."
+  number1: "Ingrese el primer número"
+  number2: "Ingrese el segundo número"
+  again?: "¿Quieres hacer otro cálculo? (Y volver a calcular)"
+  bye: "¡Coolio, caio por ahora!"

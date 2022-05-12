@@ -1,0 +1,6 @@
+welcome: "Welcome to the Mortgage calculator!"
+get_prinicpal: "enter the total value of the loan" 
+invalid: "You must enter a valid number"
+get_interest: "Enter the annual interest rate below:"
+get_years: "Enter the total number of years the loan is"
+get_months: "Enter the total number of months the loan is"

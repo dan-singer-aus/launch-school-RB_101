@@ -1,0 +1,33 @@
+
+welcome: ["**********************************************",
+          "Welcome to Rock, Paper, Scissors,Lizard, Spock",
+          "**********************************************"]
+instructions: ["Scissors cuts Paper, Paper covers Rock, Rock",
+               "crushes, Lizard poisons Spock, Spock smashes",
+               "Scissors, Scissors decapitates Lizard, Lizard",
+               "eats Paper, Paper disproves Spock, Spock",
+               "vaporizes Rock, and as it always has",
+               "Rock crushes Scissors",
+               "Got it?\nGO!"]
+round: ["**********************************************",
+        "ROUND %{count} |       | SCORE Player: %{player} Computer: %{comp}", 
+        "**********************************************"]
+select: "Select your move:"
+win_p: "You won :)"
+win_c: "Computer wins :("
+you_won: ["**********************************************",
+        "***************    YOU WON    ****************", 
+        "**********************************************"]
+you_lose: ["xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "               ):  YOU LOSE :(                 ", 
+        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"]
+replay: "Want to play again? (y/n)"
+
+end: "OK, cya, bye!"
+
+
+
+
+
+
+
