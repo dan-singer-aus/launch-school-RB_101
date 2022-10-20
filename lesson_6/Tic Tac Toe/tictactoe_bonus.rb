@@ -1,5 +1,4 @@
 require 'yaml'
-require 'pry'
 
 SCRN = YAML.load_file('TTT.yml')
 INITIAL_MARKER = ' '
