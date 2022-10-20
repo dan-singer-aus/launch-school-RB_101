@@ -1,5 +1,4 @@
 require 'yaml'
-require 'pry'
 
 SCRN = YAML.load_file('TTT.yml')
 INITIAL_MARKER = ' '
@@ -197,7 +196,7 @@ def display_scoreboard(score, mode)
 end
 
 def display_selection(current_player, piece)
-  puts "#{current_player} chose #{piece}".center(56)
+  puts "#{current_player.capitalize} chose #{piece}".center(56)
   sleep(1)
 end
 
