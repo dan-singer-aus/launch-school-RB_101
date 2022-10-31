@@ -160,13 +160,11 @@ end
 def display_bust(current_player)
   puts "#{current_player.capitalize} busted!"
   sleep(2)
-  puts `clear`
   if current_player == :player
-    puts "Dealer won the round"
+    display_round_winner(:dealer)
   else
-    puts "Player won the round"
+    puts display_round_winner(:player)
   end
-  sleep(2)
 end
 
 def detect_winner(hands)
