@@ -3,7 +3,7 @@ SUITS = ['Spades', 'Clubs', 'Diamonds', 'Hearts']
 FACES = ['Jack', 'Queen', 'King', 'Ace']
 GOAL = 21
 DEALER_CAP = 17
-ROUNDS_TO_WIN = 1
+ROUNDS_TO_WIN = 5
 
 def initialize_deck
   deck = []
@@ -20,10 +20,11 @@ def initialize_deck
 end
 
 def initialize_round
-  hands = { dealer: { cards: [], total: 0 },
-            player: { cards: [], total: 0 } }
+  hands = { player: { cards: [], total: 0 },
+            dealer: { cards: [], total: 0 } }
   deck = initialize_deck
-  return deck, hands
+  winner = nil
+  return deck, hands, winner
 end
 
 def opening_hands(deck, hands)
@@ -84,22 +85,27 @@ def adjust_aces(total, aces)
   total
 end
 
-def hit_or_stay
-  loop do
-    puts "Hit or stay? (Type selection below)"
-    print "=>"
-    choice = gets.chomp.downcase
-    break choice if ["hit", "h", "stay", "s"].include?(choice)
-    puts "please try again"
+def hit_or_stay(hands, current_player)
+  if current_player == :player
+    loop do
+      puts "Hit or stay? (Type selection below)"
+      print "=>"
+      choice = gets.chomp.downcase
+      break choice if ["hit", "h", "stay", "s"].include?(choice)
+      puts "please try again"
+    end
+  elsif hands[:dealer][:total] >= 17
+    "stay"
   end
 end
 
-def display_hands(hands, show_dealer_hand=false)
+def display_hands(hands, current_player)
   puts `clear`
-  hands.each_pair do |holder, hand|
+
+  hands.reverse_each do |holder, hand|
     formatted_cards = format_card_display(hand[:cards])
     puts "#{holder.to_s.capitalize} has:"
-    if holder == :dealer && !show_dealer_hand
+    if holder == :dealer && current_player == :player
       puts formatted_cards[0]
       puts "And an unknown card"
     else
@@ -118,29 +124,19 @@ def format_card_display(hand)
   card_array
 end
 
-def players_turn(hands, deck)
-  display_hands(hands)
+def turn(current_player, hands, deck)
   loop do
-    if ["stay", "s"].include?(hit_or_stay)
+    display_hands(hands, current_player)
+    sleep(1)
+    if ["stay", "s"].include?(hit_or_stay(hands, current_player))
       break
     else
-      card = draw_card!(deck, hands, :player)
-      display_drawn_card(card, "player")
-      display_hands(hands)
+      card = draw_card!(deck, hands, current_player)
+      display_drawn_card(card, current_player.to_s)
+      display_hands(hands, current_player)
       sleep(1)
-      break if hands[:player][:total] > GOAL
+      break if hands[current_player][:total] > GOAL
     end
-  end
-end
-
-def dealers_turn(hands, deck)
-  display_hands(hands, true)
-  sleep(1)
-  while hands[:dealer][:total] < DEALER_CAP
-    card = draw_card!(deck, hands, :dealer)
-    display_drawn_card(card, "dealer")
-    display_hands(hands, true)
-    sleep(1)
   end
 end
 
@@ -153,13 +149,26 @@ def player_busted?(hand)
   hand[:total] > GOAL
 end
 
-def end_round_sequence(scores, hands, winner=nil)
-  winner = detect_winner(hands) if !winner
+def end_round_sequence(hands, scores)
+  winner = if hands.any? { |_, hand| hand[:total] > GOAL }
+             detect_winner_bust(hands)
+           else
+             detect_winner_points(hands)
+           end
+  # binding.pry
   display_round_winner(winner)
   scores[winner.to_sym] += 1 unless winner == "tie"
 end
 
-def detect_winner(hands)
+def detect_winner_bust(hands)
+  winner = ''
+  hands.each_pair do |name, hand|
+    winner = name if hand[:total] <= GOAL
+  end
+  winner
+end
+
+def detect_winner_points(hands)
   if hands[:player][:total] > hands[:dealer][:total]
     "player"
   elsif hands[:player][:total] < hands[:dealer][:total]
@@ -170,6 +179,7 @@ def detect_winner(hands)
 end
 
 def display_round_winner(winner)
+  # binding.pry
   puts `clear`
   if winner != "tie"
     puts "#{winner.capitalize} won the round"
@@ -224,6 +234,18 @@ def display_scores(scores)
   sleep(2)
 end
 
+def game_loop!(hands, deck)
+  opening_hands(deck, hands)
+  hands.each_pair do |name, _|
+    turn(name, hands, deck)
+    if player_busted?(hands[name])
+      display_bust(name)
+      break
+    end
+    display_change_turn if name == :player
+  end
+end
+
 display_intro
 loop do
   scores = { dealer: 0, player: 0 }
@@ -231,21 +253,8 @@ loop do
     display_scores(scores)
     break if scores.value?(ROUNDS_TO_WIN)
     deck, hands = initialize_round
-    opening_hands(deck, hands)
-    players_turn(hands, deck)
-    if player_busted?(hands[:player])
-      display_bust(:player)
-      end_round_sequence(scores, hands, :dealer)
-      next
-    end
-    display_change_turn
-    dealers_turn(hands, deck)
-    if player_busted?(hands[:dealer])
-      display_bust(:dealer)
-      end_round_sequence(scores, hands, :player)
-      next
-    end
-    end_round_sequence(scores, hands)
+    game_loop!(hands, deck)
+    end_round_sequence(hands, scores)
   end
   display_game_winner(scores)
   break unless play_again?
