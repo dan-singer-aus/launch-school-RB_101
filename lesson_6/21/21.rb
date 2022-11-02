@@ -1,18 +1,19 @@
 require 'pry'
-SUITS = { s: 'Spades', c: 'Clubs', d: 'Diamonds', h: 'Hearts' }
-FACES = { j: 'Jack', q: 'Queen', k: 'King', a: 'Ace' }
+SUITS = ['Spades', 'Clubs', 'Diamonds', 'Hearts']
+FACES = ['Jack', 'Queen', 'King', 'Ace']
 GOAL = 21
 DEALER_CAP = 17
+ROUNDS_TO_WIN = 1
 
 def initialize_deck
   deck = []
 
-  SUITS.each_key do |suit|
+  SUITS.each do |suit|
     (2..10).each do |number|
-      deck << [number, suit]
+      deck << { suit: suit, value: number }
     end
-    FACES.each_key do |face|
-      deck << [face, suit]
+    FACES.each do |face|
+      deck << { suit: suit, value: face }
     end
   end
   deck
@@ -34,13 +35,7 @@ end
 
 def display_drawn_card(card, current_player)
   puts `clear`
-  card_face = if FACES.include?(card[0])
-                FACES[card[0]]
-              else
-                card[0]
-              end
-  card_suit = SUITS[card[1]]
-  puts "#{current_player.capitalize} drew #{card_face} of #{card_suit}"
+  puts "#{current_player.capitalize} drew #{card[:value]} of #{card[:suit]}"
   sleep(2)
 end
 
@@ -68,18 +63,18 @@ def hand_total(hand)
             elsif face_card?(card)
               total + 10
             else
-              total + card[0]
+              total + card[:value]
             end
   end
   adjust_aces(total, aces)
 end
 
 def ace_card?(card)
-  card[0] == :a
+  card[:value] == 'Ace'
 end
 
 def face_card?(card)
-  FACES.keys[0, 3].include?(card[0])
+  FACES[0, 3].include?(card[:value])
 end
 
 def adjust_aces(total, aces)
@@ -94,7 +89,7 @@ def hit_or_stay
     puts "Hit or stay? (Type selection below)"
     print "=>"
     choice = gets.chomp.downcase
-    break choice if ["hit", "stay"].include?(choice)
+    break choice if ["hit", "h", "stay", "s"].include?(choice)
     puts "please try again"
   end
 end
@@ -118,13 +113,7 @@ end
 def format_card_display(hand)
   card_array = []
   hand.each do |card|
-    card_face = if FACES.include?(card[0])
-                  FACES[card[0]]
-                else
-                  card[0]
-                end
-    card_suit = SUITS[card[1]]
-    card_array << "#{card_face} of #{card_suit}"
+    card_array << "#{card[:value]} of #{card[:suit]}"
   end
   card_array
 end
@@ -132,14 +121,14 @@ end
 def players_turn(hands, deck)
   display_hands(hands)
   loop do
-    if hit_or_stay == "stay"
+    if ["stay", "s"].include?(hit_or_stay)
       break
     else
       card = draw_card!(deck, hands, :player)
       display_drawn_card(card, "player")
       display_hands(hands)
-      sleep(0.5)
-      break "bust" if hands[:player][:total] > GOAL
+      sleep(1)
+      break if hands[:player][:total] > GOAL
     end
   end
 end
@@ -151,20 +140,23 @@ def dealers_turn(hands, deck)
     card = draw_card!(deck, hands, :dealer)
     display_drawn_card(card, "dealer")
     display_hands(hands, true)
-    sleep(0.5)
+    sleep(1)
   end
-
-  return "bust" if hands[:dealer][:total] > GOAL
 end
 
 def display_bust(current_player)
   puts "#{current_player.capitalize} busted!"
   sleep(2)
-  if current_player == :player
-    display_round_winner(:dealer)
-  else
-    puts display_round_winner(:player)
-  end
+end
+
+def player_busted?(hand)
+  hand[:total] > GOAL
+end
+
+def end_round_sequence(scores, hands, winner=nil)
+  winner = detect_winner(hands) if !winner
+  display_round_winner(winner)
+  scores[winner.to_sym] += 1 unless winner == "tie"
 end
 
 def detect_winner(hands)
@@ -189,10 +181,15 @@ end
 
 def play_again?
   puts `clear`
-  puts "Play again? Yes/No"
-  print "=>"
-  answer = gets.chomp.downcase
-  return true if ["yes", "y"].include?(answer)
+  answer = ''
+  loop do
+    puts "Play again? Yes/No"
+    print "=>"
+    answer = gets.chomp.downcase
+    break if ['yes', "y", "n", "no"].include?(answer)
+    puts "please try again"
+  end
+  return true if ['yes', 'y'].include?(answer)
 end
 
 def display_change_turn
@@ -216,7 +213,7 @@ end
 
 def display_game_winner(scores)
   puts `clear`
-  game_winner = scores.key(5).to_s.capitalize
+  game_winner = scores.key(ROUNDS_TO_WIN).to_s.capitalize
   puts "#{game_winner} won the Game"
   sleep(2)
 end
@@ -232,26 +229,25 @@ loop do
   scores = { dealer: 0, player: 0 }
   loop do
     display_scores(scores)
-    break if scores.value?(5)
+    break if scores.value?(ROUNDS_TO_WIN)
     deck, hands = initialize_round
     opening_hands(deck, hands)
-    if players_turn(hands, deck) == "bust"
+    players_turn(hands, deck)
+    if player_busted?(hands[:player])
       display_bust(:player)
-      scores[:dealer] += 1
+      end_round_sequence(scores, hands, :dealer)
       next
     end
     display_change_turn
-    if dealers_turn(hands, deck) == "bust"
+    dealers_turn(hands, deck)
+    if player_busted?(hands[:dealer])
       display_bust(:dealer)
-      scores[:player] += 1
+      end_round_sequence(scores, hands, :player)
       next
     end
-    winner = detect_winner(hands)
-    display_round_winner(winner)
-    scores[winner.to_sym] += 1 unless winner == "tie"
+    end_round_sequence(scores, hands)
   end
   display_game_winner(scores)
   break unless play_again?
 end
-
 display_outro
